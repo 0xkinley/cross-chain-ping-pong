@@ -1,13 +1,13 @@
-pub mod constants;
-pub mod error;
-pub mod instructions;
-pub mod state;
+mod constants;
+mod error;
+mod instructions;
+mod msg_codec;
+mod state;
 
 use anchor_lang::prelude::*;
-
-pub use constants::*;
-pub use instructions::*;
-pub use state::*;
+use instructions::*;
+use oapp::{endpoint::MessagingFee, endpoint_cpi::LzAccount, LzReceiveParams};
+use state::*;
 
 declare_id!("8Re8VvPuKychYQTXn4MxE3vxJPM2rVQS8vBv4QnsGdMy");
 
@@ -15,7 +15,45 @@ declare_id!("8Re8VvPuKychYQTXn4MxE3vxJPM2rVQS8vBv4QnsGdMy");
 pub mod pingpong {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        initialize::handler(ctx)
+    pub fn init_store(mut ctx: Context<InitGame>, params: InitGameParams) -> Result<()> {
+        InitGame::apply(&mut ctx, &params)
+    }
+
+    pub fn set_peer_config(
+        mut ctx: Context<SetPeerConfig>,
+        params: SetPeerConfigParams,
+    ) -> Result<()> {
+        SetPeerConfig::apply(&mut ctx, &params)
+    }
+
+    pub fn pause_game(mut ctx: Context<PauseGame>) -> Result<()> {
+        PauseGame::apply(&mut ctx)
+    }
+
+    pub fn resume_game(mut ctx: Context<ResumeGame>) -> Result<()> {
+        ResumeGame::apply(&mut ctx)
+    }
+
+    pub fn fund_contract(ctx: Context<FundContract>, amount: u64) -> Result<()> {
+        FundContract::apply(&ctx, amount)
+    }
+
+    pub fn quote_send(ctx: Context<QuoteSend>, params: QuoteSendParams) -> Result<MessagingFee> {
+        QuoteSend::apply(&ctx, &params)
+    }
+
+    pub fn send_ball(mut ctx: Context<SendBall>, params: SendBallParams) -> Result<()> {
+        SendBall::apply(&mut ctx, &params)
+    }
+
+    pub fn lz_receive(mut ctx: Context<LzReceive>, params: LzReceiveParams) -> Result<()> {
+        LzReceive::apply(&mut ctx, &params)
+    }
+
+    pub fn lz_receive_types(
+        ctx: Context<LzReceiveTypes>,
+        params: LzReceiveParams,
+    ) -> Result<Vec<LzAccount>> {
+        LzReceiveTypes::apply(&ctx, &params)
     }
 }

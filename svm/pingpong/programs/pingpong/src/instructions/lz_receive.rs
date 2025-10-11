@@ -1,0 +1,103 @@
+use anchor_lang::prelude::*;
+use crate::{
+    state::{GameState, PeerConfig },
+    constants::{GAME_STATE_SEED, PEER_SEED, INITIAL_BALL_VALUE},
+    error::PingPongError,
+    msg_codec,
+};
+use oapp::endpoint::{cpi::accounts::Clear, instructions::ClearParams, ConstructCPIContext, ID as ENDPOINT_ID};
+use oapp::LzReceiveParams;
+
+#[derive(Accounts)]
+#[instruction(params: LzReceiveParams)]
+pub struct LzReceive<'info> {
+    #[account(
+        mut, 
+        seeds = [GAME_STATE_SEED], 
+        bump = game.bump
+    )]
+    pub game: Account<'info, GameState>,
+    
+    #[account(
+        seeds = [PEER_SEED, &game.key().to_bytes(), &params.src_eid.to_be_bytes()],
+        bump = peer.bump,
+        constraint = params.sender == peer.peer_address @ PingPongError::GameNotActive
+    )]
+    pub peer: Account<'info, PeerConfig>,
+}
+
+impl LzReceive<'_> {
+    pub fn apply(ctx: &mut Context<LzReceive>, params: &LzReceiveParams) -> Result<()> {
+        let game = &mut ctx.accounts.game;
+        
+        require!(!game.paused, PingPongError::GamePaused);
+        
+        // Clear message to prevent replay
+        let seeds: &[&[u8]] = &[GAME_STATE_SEED, &[game.bump]];
+        let accounts_for_clear = &ctx.remaining_accounts[0..Clear::MIN_ACCOUNTS_LEN];
+        
+        oapp::endpoint_cpi::clear(
+            ENDPOINT_ID,
+            game.key(),
+            accounts_for_clear,
+            seeds,
+            ClearParams {
+                receiver: game.key(),
+                src_eid: params.src_eid,
+                sender: params.sender,
+                nonce: params.nonce,
+                guid: params.guid,
+                message: params.message.clone(),
+            },
+        )?;
+        
+        // Decode received ball value
+        let received_value = msg_codec::decode(&params.message)?;
+        
+        msg!("Ball received: value={}", received_value);
+        
+        // Validate received value
+        require!(received_value > 0, PingPongError::BallValueZero);
+        require!(
+            received_value <= INITIAL_BALL_VALUE as u128,
+            PingPongError::BallValueTooHigh
+        );
+        
+        // Decrement ball value
+        let new_value = received_value
+            .checked_sub(1)
+            .ok_or(PingPongError::BallValueUnderflow)?;
+        
+        // Update state
+        game.ball_value = new_value;
+        game.rally_count = game.rally_count.checked_add(1).unwrap_or(u32::MAX);
+        game.has_ball = true;
+        game.game_active = true;
+        
+        // Check circuit breaker
+        require!(
+            game.rally_count <= GameState::MAX_RALLIES,
+            PingPongError::MaxRalliesExceeded
+        );
+        
+        msg!(
+            "Decremented ball: new_value={}, rally_count={}",
+            new_value,
+            game.rally_count
+        );
+        
+        // Game over check
+        if new_value == 0 {
+            game.game_active = false;
+            game.has_ball = false;
+            msg!("GAME OVER! Final rally count: {}", game.rally_count);
+        } else {
+            // Auto-rally: send back to EVM
+            // Note: In production, we'dcall send_ball instruction via CPI
+            // For this demo, the frontend will trigger the send after this completes
+            msg!("Ready to send back value: {}", new_value);
+        }
+        
+        Ok(())
+    }
+}
