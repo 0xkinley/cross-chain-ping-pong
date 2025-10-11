@@ -70,13 +70,13 @@ impl LzReceive<'_> {
         
         // Update state
         game.ball_value = new_value;
-        game.rally_count = game.rally_count.checked_add(1).unwrap_or(u32::MAX);
+        game.rally_count = game.rally_count.checked_add(1).unwrap_or(u64::MAX);
         game.has_ball = true;
         game.game_active = true;
         
         // Check circuit breaker
         require!(
-            game.rally_count <= GameState::MAX_RALLIES,
+            game.rally_count <= crate::constants::MAX_RALLIES_CAP,
             PingPongError::MaxRalliesExceeded
         );
         

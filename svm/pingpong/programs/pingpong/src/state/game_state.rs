@@ -6,22 +6,23 @@ pub struct GameState {
     pub bump: u8,
     pub endpoint_program: Pubkey,
     
-    // Game state
-    pub ball_value: u128,
-    pub rally_count: u32,
+    // Game state - MUST MATCH EVM DATA TYPES
+    pub ball_value: u128,        // EVM uses uint256, but u128 is sufficient for 1e20
+    pub rally_count: u64,        // EVM uses uint256, but u64 should be sufficient
+    pub max_rallies: u64,        // Store max rallies like EVM does
     pub has_ball: bool,
     pub game_active: bool,
     pub paused: bool,
     
     // Remote chain endpoint ID (e.g., 40161 for Sepolia)
     pub remote_eid: u32,
+    
+    // Message deduplication (equivalent to EVM's _processedGuid mapping)
+    pub last_received_nonce: u64,
 }
 
 impl GameState {
     pub const SIZE: usize = 8 + std::mem::size_of::<Self>();
-    
-    pub const INITIAL_BALL_VALUE: u128 = 100;
-    pub const MAX_RALLIES: u32 = 200; // Circuit breaker
 }
 
 #[account]
