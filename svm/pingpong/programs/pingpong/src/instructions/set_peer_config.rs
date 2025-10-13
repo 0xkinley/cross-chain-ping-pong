@@ -25,7 +25,7 @@ pub struct SetPeerConfig<'info> {
 
     #[account(
         seeds = [GAME_STATE_SEED],
-        bump = game.bump,
+        bump,
         has_one = admin @ PingPongError::NotAuthorised
     )]
     pub game: Account<'info, GameState>,

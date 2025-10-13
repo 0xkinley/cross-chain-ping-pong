@@ -9,7 +9,7 @@ use oapp::endpoint::{
 use crate::{
     state::{GameState, QuoteSendParams, PeerConfig},
     constants::{GAME_STATE_SEED, PEER_SEED},
-    msg_codec,
+    PingPongMessage,
 };
 
 #[derive(Accounts)]
@@ -37,7 +37,8 @@ pub struct QuoteSend<'info> {
 
 impl<'info> QuoteSend<'info> {
     pub fn apply(ctx: &Context<QuoteSend>, params: &QuoteSendParams) -> Result<MessagingFee> {
-        let message = msg_codec::encode(params.ball_value);
+        let msg = PingPongMessage::new(params.ball_value, ctx.accounts.game.rally_count);
+        let message = msg.encode();
         
         let quote_params = QuoteParams {
             sender: ctx.accounts.game.key(),

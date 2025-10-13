@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::pubkey::Pubkey;
-use anchor_lang::solana_program::account_info::AccountInfo;
 use crate::{
     state::game_state::{GameState, LzReceiveTypesAccounts, InitGameParams},
-    constants::{LZ_RECEIVE_TYPES_SEED, GAME_STATE_SEED}
+    constants::{LZ_RECEIVE_TYPES_SEED, GAME_STATE_SEED, MAX_RALLIES_CAP}
 };
-use oapp::endpoint::{instructions::RegisterOAppParams, ID as ENDPOINT_ID};
+
+// Temporarily commented out for basic testing
+// use oapp::endpoint::{instructions::RegisterOAppParams, ID as ENDPOINT_ID};
 
 #[derive(Accounts)]
 #[instruction(params: InitGameParams)]
@@ -26,7 +26,7 @@ pub struct InitGame<'info> {
         init,
         payer = payer,
         space = LzReceiveTypesAccounts::SIZE,
-        seeds = [LZ_RECEIVE_TYPES_SEED, &game.key().as_ref()],
+        seeds = [LZ_RECEIVE_TYPES_SEED, GAME_STATE_SEED],
         bump
     )]
     pub lz_receive_types_accounts: Account<'info, LzReceiveTypesAccounts>,
@@ -46,14 +46,19 @@ impl InitGame<'_> {
         // Game initialization
         game.ball_value = 0;
         game.rally_count = 0;
+        game.max_rallies = MAX_RALLIES_CAP;
         game.has_ball = false;
         game.game_active = false;
         game.paused = false;
         game.remote_eid = params.remote_eid;
+        game.last_received_nonce = 0;
 
         ctx.accounts.lz_receive_types_accounts.game = game.key();
         
-        // Register with LayerZero Endpoint
+        // TODO: Register with LayerZero Endpoint
+        // This will be implemented in a separate instruction to avoid circular dependencies
+        // Temporarily commented out to test basic functionality
+        /*
         let register_params = RegisterOAppParams { delegate: Pubkey::new_from_array(game.admin.to_bytes()) };
         let seeds: &[&[u8]] = &[GAME_STATE_SEED, &[game.bump]];
 
@@ -64,6 +69,7 @@ impl InitGame<'_> {
             seeds,
             register_params,
         )?;
+        */
         
         msg!("Ping-Pong store initialized");
         Ok(())

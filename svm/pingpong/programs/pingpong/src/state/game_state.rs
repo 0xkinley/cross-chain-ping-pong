@@ -22,7 +22,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub const SIZE: usize = 8 + std::mem::size_of::<Self>();
+    pub const SIZE: usize = 8 + 120;
 }
 
 #[account]
@@ -31,7 +31,7 @@ pub struct LzReceiveTypesAccounts {
 }
 
 impl LzReceiveTypesAccounts {
-    pub const SIZE: usize = 8 + std::mem::size_of::<Self>();
+    pub const SIZE: usize = 8 + 32;
 }
 
 #[derive(Clone, AnchorSerialize, AnchorDeserialize)]

@@ -10,7 +10,7 @@ pub struct PeerConfig {
 }
 
 impl PeerConfig {
-    pub const SIZE: usize = 8 + std::mem::size_of::<Self>();
+    pub const SIZE: usize = 8 + 32 + EnforcedOptions::INIT_SPACE + 1;
 }
 
 #[derive(Clone, Default, AnchorSerialize, AnchorDeserialize, InitSpace)]

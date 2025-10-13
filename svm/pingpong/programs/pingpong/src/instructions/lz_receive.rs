@@ -3,9 +3,16 @@ use crate::{
     state::{GameState, PeerConfig },
     constants::{GAME_STATE_SEED, PEER_SEED, INITIAL_BALL_VALUE},
     error::PingPongError,
-    msg_codec,
+    PingPongMessage
 };
-use oapp::endpoint::{cpi::accounts::Clear, instructions::ClearParams, ConstructCPIContext, ID as ENDPOINT_ID};
+use oapp::endpoint::{
+    state::EndpointSettings,
+    cpi::accounts::Clear, 
+    instructions::ClearParams, 
+    ConstructCPIContext, 
+    ENDPOINT_SEED,
+    ID as ENDPOINT_ID
+};
 use oapp::LzReceiveParams;
 
 #[derive(Accounts)]
@@ -24,9 +31,17 @@ pub struct LzReceive<'info> {
         constraint = params.sender == peer.peer_address @ PingPongError::GameNotActive
     )]
     pub peer: Account<'info, PeerConfig>,
+
+    #[account(
+        seeds = [ENDPOINT_SEED], 
+        bump = endpoint.bump, 
+        seeds::program = ENDPOINT_ID
+    )]
+    pub endpoint: Account<'info, EndpointSettings>,
 }
 
 impl LzReceive<'_> {
+
     pub fn apply(ctx: &mut Context<LzReceive>, params: &LzReceiveParams) -> Result<()> {
         let game = &mut ctx.accounts.game;
         
@@ -52,19 +67,20 @@ impl LzReceive<'_> {
         )?;
         
         // Decode received ball value
-        let received_value = msg_codec::decode(&params.message)?;
+        let received_msg = PingPongMessage::decode(&params.message)?;
+
         
-        msg!("Ball received: value={}", received_value);
+        msg!("Ball received: value={}, rally={}", received_msg.ball_value, received_msg.rally_count);
         
         // Validate received value
-        require!(received_value > 0, PingPongError::BallValueZero);
+        require!(received_msg.ball_value > 0, PingPongError::BallValueZero);
         require!(
-            received_value <= INITIAL_BALL_VALUE as u128,
+            received_msg.ball_value <= INITIAL_BALL_VALUE as u128,
             PingPongError::BallValueTooHigh
         );
         
         // Decrement ball value
-        let new_value = received_value
+        let new_value = received_msg.ball_value
             .checked_sub(1)
             .ok_or(PingPongError::BallValueUnderflow)?;
         
@@ -91,11 +107,13 @@ impl LzReceive<'_> {
             game.game_active = false;
             game.has_ball = false;
             msg!("GAME OVER! Final rally count: {}", game.rally_count);
-        } else {
-            // Auto-rally: send back to EVM
-            // Note: In production, we'dcall send_ball instruction via CPI
-            // For this demo, the frontend will trigger the send after this completes
-            msg!("Ready to send back value: {}", new_value);
+        } 
+
+        if game.rally_count >= game.max_rallies {
+            game.game_active = false;
+            game.has_ball = false;
+            msg!("GAME OVER! Max rallies reached: {}", game.rally_count);
+            return Ok(());
         }
         
         Ok(())

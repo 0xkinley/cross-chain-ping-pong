@@ -4,3 +4,4 @@ pub mod message;
 
 pub use game_state::*;
 pub use peer_config::*;
+pub use message::*;

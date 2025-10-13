@@ -3,7 +3,7 @@ use crate::{
     state::{GameState, PeerConfig, SendBallParams},
     constants::{GAME_STATE_SEED, PEER_SEED},
     error::PingPongError,
-    msg_codec,
+    PingPongMessage,
 };
 use oapp::endpoint::{instructions::SendParams, state::EndpointSettings, ENDPOINT_SEED, ID as ENDPOINT_ID};
 
@@ -39,7 +39,8 @@ impl<'info> SendBall<'info> {
         require!(game.has_ball, PingPongError::DoesNotHaveBall);
         require!(params.ball_value > 0, PingPongError::BallValueZero);
         
-        let message = msg_codec::encode(params.ball_value);
+        let msg = PingPongMessage::new(params.ball_value, game.rally_count);
+        let message = msg.encode();
         let seeds: &[&[u8]] = &[GAME_STATE_SEED, &[game.bump]];
 
         let send_params = SendParams {

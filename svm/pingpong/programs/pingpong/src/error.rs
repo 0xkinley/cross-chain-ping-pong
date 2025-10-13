@@ -1,34 +1,37 @@
-use anchor_lang::prelude::error_code;
+use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum PingPongError {
-    #[msg("Game is paused")]
-    GamePaused,
+pub enum ErrorCode {
+    #[msg("Game is already active")]
+    GameAlreadyActive,
     
     #[msg("Game is not active")]
     GameNotActive,
-
-    #[msg("Game is not paused")]
-    GameNotPaused,
-
-    #[msg("Solana does not currently have the ball")]
-    DoesNotHaveBall,
     
-    #[msg("Ball value would underflow")]
-    BallValueUnderflow,
+    #[msg("Invalid max rallies")]
+    InvalidMaxRallies,
     
-    #[msg("Ball value cannot be zero")]
+    #[msg("Max rallies reached")]
+    MaxRalliesReached,
+    
+    #[msg("No ball to serve")]
+    NoBallToServe,
+    
+    #[msg("Already has ball")]
+    AlreadyHasBall,
+    
+    #[msg("Invalid peer")]
+    InvalidPeer,
+    
+    #[msg("Insufficient balance")]
+    InsufficientBalance,
+    
+    #[msg("Ball value is zero")]
     BallValueZero,
     
-    #[msg("Ball value exceeds maximum")]
-    BallValueTooHigh,
+    #[msg("Invalid message")]
+    InvalidMessage,
     
-    #[msg("Maximum rallies exceeded")]
-    MaxRalliesExceeded,
-    
-    #[msg("Insufficient funds for message fee")]
-    InsufficientFunds,
-
-    #[msg("Not Authorised for the action")]
-    NotAuthorised,
+    #[msg("Message already processed")]
+    MessageAlreadyProcessed,
 }
