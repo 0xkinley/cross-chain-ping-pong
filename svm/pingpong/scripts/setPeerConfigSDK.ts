@@ -8,14 +8,14 @@ import { PublicKey, SystemProgram } from "@solana/web3.js";
 const IDL_PATH = path.resolve(__dirname, "../target/idl/pingpong.json");
 const GAME_STATE_SEED = "game_state";
 const PEER_SEED = "Peer";
-const REMOTE_EID = 40168; // Corrected Sepolia testnet EID
+const REMOTE_EID = 40161;
 const EVM_CONTRACT_ADDRESS = "0x55D59591773CBdC4a3dc5e38E8Ef1cE85C7Ff365";
 
 function u32be(n: number) { return new BN(n).toArrayLike(Buffer, "be", 4); }
 function evmToBytes32(hex: string): number[] {
   const h = hex.startsWith("0x") ? hex.slice(2) : hex;
-  const src = Buffer.from(h, "hex");               // 20 bytes
-  const out = Buffer.alloc(32); src.copy(out, 12); // left-pad
+  const src = Buffer.from(h, "hex");              
+  const out = Buffer.alloc(32); src.copy(out, 12);
   return [...out];
 }
 
@@ -37,11 +37,11 @@ function evmToBytes32(hex: string): number[] {
 
   const bytes32 = evmToBytes32(EVM_CONTRACT_ADDRESS);
 
-  // Try the shapes your environment accepts; keep the first that encodes
+ 
   const candidates = [
     { PeerAddress: [bytes32] },
     { PeerAddress: { "0": bytes32 } },
-    { peerAddress: [bytes32] },       // ← this worked in your last run
+    { peerAddress: [bytes32] },      
     { peerAddress: { "0": bytes32 } },
   ];
   let cfg: any | null = null;
@@ -55,5 +55,5 @@ function evmToBytes32(hex: string): number[] {
     .accounts({ admin, game: gamePDA, peer: peerPDA, systemProgram: SystemProgram.programId })
     .rpc();
 
-  console.log("✅ setPeerConfig tx:", sig);
+  console.log(" setPeerConfig tx:", sig);
 })().catch((e) => { console.error(e); process.exit(1); });

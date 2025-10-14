@@ -1,12 +1,8 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
 import "./PingPongEVM.sol";
 
 contract PingPongEVMTester is PingPongEVM {
-    // ========================================
-    // CONSTRUCTOR
-    // ========================================
 
     constructor(
         address _endpoint,
@@ -14,9 +10,6 @@ contract PingPongEVMTester is PingPongEVM {
         address _owner
     ) PingPongEVM(_endpoint, _peerEid, _owner) {}
 
-    // ========================================
-    // TEST FUNCTIONS
-    // ========================================
 
     function testLzReceive(
         Origin calldata _origin,

@@ -8,27 +8,19 @@ import hre from "hardhat";
 import { parseEther, formatEther, ZeroAddress } from "ethers";
 
 describe("PingPongEVM", function () {
-  // ========================================
-  // CONSTANTS
-  // ========================================
 
   const SOLANA_EID         = 40168;
-  const INITIAL_BALL_VALUE = parseEther("100"); // 1e20 wei = 100 ETH
+  const INITIAL_BALL_VALUE = parseEther("100");
   const MAX_RALLIES_CAP    = 100;
 
-  // ========================================
-  // FIXTURES
-  // ========================================
 
   async function deployPingPongFixture() {
     const [owner, user1, user2] = await hre.ethers.getSigners();
 
-    // Deploy mock LayerZero endpoint
     const MockEndpoint        = await hre.ethers.getContractFactory("MockEndpoint");
     const mockEndpoint        = await MockEndpoint.deploy();
     const mockEndpointAddress = await mockEndpoint.getAddress();
 
-    // Deploy the PingPongEVM contract
     const PingPongEVM = await hre.ethers.getContractFactory("PingPongEVM");
     const pingPong = await PingPongEVM.deploy(
       mockEndpointAddress,
@@ -39,9 +31,6 @@ describe("PingPongEVM", function () {
     return { pingPong, mockEndpoint, owner, user1, user2 };
   }
 
-  // ========================================
-  // DEPLOYMENT TESTS
-  // ========================================
 
   describe("Deployment", function () {
     it("Should set the correct initial values", async function () {
@@ -65,9 +54,6 @@ describe("PingPongEVM", function () {
     });
   });
 
-  // ========================================
-  // GAME STATE MANAGEMENT TESTS
-  // ========================================
 
   describe("Game State Management", function () {
     it("Should allow funding the contract", async function () {
@@ -102,9 +88,6 @@ describe("PingPongEVM", function () {
     });
   });
 
-  // ========================================
-  // QUOTE FUNCTION TESTS
-  // ========================================
 
   describe("Quote Function", function () {
     it("Should return a valid quote", async function () {
@@ -112,24 +95,18 @@ describe("PingPongEVM", function () {
       
       const ballValue = parseEther("100");
       const rallyCount = 5;
-      const options = "0x"; // empty options
+      const options = "0x";
       
-      // Note: This will likely revert in testing environment due to mock endpoint
-      // In a real LayerZero environment, this would return actual fee estimates
       try {
         const quote = await pingPong.quote(ballValue, rallyCount, options, false);
         expect(quote.nativeFee).to.be.a('bigint');
         expect(quote.lzTokenFee).to.be.a('bigint');
       } catch (error) {
-        // Expected in test environment with mock endpoint
         expect(error).to.exist;
       }
     });
   });
 
-  // ========================================
-  // SERVE FUNCTION TESTS
-  // ========================================
 
   describe("Serve Function", function () {
     it("Should validate maxRallies parameter", async function () {
@@ -138,12 +115,10 @@ describe("PingPongEVM", function () {
       const options = "0x";
       const value = parseEther("0.1");
 
-      // Test zero maxRallies
       await expect(
         pingPong.connect(user1).serve(0, options, { value })
       ).to.be.revertedWithCustomError(pingPong, "InvalidMaxRallies");
 
-      // Test exceeding max cap
       await expect(
         pingPong.connect(user1).serve(MAX_RALLIES_CAP + 1, options, { value })
       ).to.be.revertedWithCustomError(pingPong, "InvalidMaxRallies");
@@ -152,15 +127,9 @@ describe("PingPongEVM", function () {
     it("Should reject serve when game is already active", async function () {
       const { pingPong, user1 } = await loadFixture(deployPingPongFixture);
 
-      // This test would require mocking LayerZero behavior or 
-      // creating a modified version for testing
-      // For now, we test the validation logic
     });
   });
 
-  // ========================================
-  // ACCESS CONTROL TESTS
-  // ========================================
 
   describe("Access Control", function () {
     it("Should allow owner to set peer", async function () {
@@ -184,11 +153,9 @@ describe("PingPongEVM", function () {
     it("Should allow owner to withdraw funds", async function () {
       const { pingPong, owner, user1 } = await loadFixture(deployPingPongFixture);
 
-      // First fund the contract
       const fundAmount = parseEther("1");
       await pingPong.connect(user1).fund({ value: fundAmount });
 
-      // Owner withdraws
       const withdrawAmount = parseEther("0.5");
       await expect(pingPong.connect(owner).withdraw(user1.address, withdrawAmount))
         .to.not.be.reverted;
@@ -209,15 +176,11 @@ describe("PingPongEVM", function () {
     });
   });
 
-  // ========================================
-  // GAS OPTIMIZATION TESTS
-  // ========================================
 
   describe("Gas Optimization Tests", function () {
     it("Should efficiently pack state variables", async function () {
       const { pingPong } = await loadFixture(deployPingPongFixture);
 
-      // Test that gameState struct is properly packed
       const gameState = await pingPong.gameState();
       expect(gameState.maxRallies).to.equal(0);
       expect(gameState.hasBall).to.equal(false);
@@ -227,15 +190,11 @@ describe("PingPongEVM", function () {
     it("Should use custom errors efficiently", async function () {
       const { pingPong, user1 } = await loadFixture(deployPingPongFixture);
 
-      // Test custom error usage
       await expect(pingPong.connect(user1).fund({ value: 0 }))
         .to.be.revertedWithCustomError(pingPong, "InsufficientFee");
     });
   });
 
-  // ========================================
-  // RECEIVE & FALLBACK FUNCTION TESTS
-  // ========================================
 
   describe("Receive and Fallback Functions", function () {
     it("Should accept ETH via receive function", async function () {
@@ -261,32 +220,25 @@ describe("PingPongEVM", function () {
         user1.sendTransaction({
           to: await pingPong.getAddress(),
           value: sendAmount,
-          data: "0x1234", // arbitrary data to trigger fallback
+          data: "0x1234",
         })
       ).to.emit(pingPong, "ContractFunded")
         .withArgs(user1.address, sendAmount);
     });
   });
 
-  // ========================================
-  // HELPER FUNCTION TESTS
-  // ========================================
 
   describe("Helper Functions", function () {
     it("Should encode messages correctly", async function () {
       const { pingPong } = await loadFixture(deployPingPongFixture);
       
-      // These are internal functions, so we test them indirectly through public functions
-      // The _encodeMessage function is used in quote() function
       const ballValue = parseEther("50");
       const rallyCount = 3;
       const options = "0x";
       
-      // If quote doesn't revert, it means _encodeMessage worked correctly
       try {
         await pingPong.quote(ballValue, rallyCount, options, false);
       } catch (error) {
-        // Expected in test environment due to mock LayerZero endpoint
         expect(error).to.exist;
       }
     });
@@ -297,7 +249,6 @@ describe("PingPongEVM", function () {
       const initialBalance = await pingPong.getContractBalance();
       expect(initialBalance).to.equal(0);
 
-      // Fund the contract
       const fundAmount = parseEther("2");
       await pingPong.connect(user1).fund({ value: fundAmount });
 
@@ -306,9 +257,6 @@ describe("PingPongEVM", function () {
     });
   });
 
-  // ========================================
-  // INTEGRATION SCENARIO TESTS
-  // ========================================
 
   describe("Integration Scenarios", function () {
     it("Should handle multiple funding operations", async function () {
@@ -326,10 +274,8 @@ describe("PingPongEVM", function () {
     it("Should maintain state consistency", async function () {
       const { pingPong, owner, user1 } = await loadFixture(deployPingPongFixture);
 
-      // Fund contract
       await pingPong.connect(user1).fund({ value: parseEther("1") });
 
-      // Check all state variables are consistent
       expect(await pingPong.ballValue()).to.equal(0);
       expect(await pingPong.rallyCount()).to.equal(0);
       expect(await pingPong.hasBall()).to.equal(false);
@@ -338,9 +284,6 @@ describe("PingPongEVM", function () {
     });
   });
 
-  // ========================================
-  // SOLANA-FIRST SCENARIO TESTS
-  // ========================================
 
   describe("Solana-First Scenarios", function () {
     it("Should now accept and auto-initialize from Solana messages (FIXED!)", async function () {
@@ -355,7 +298,6 @@ describe("PingPongEVM", function () {
       console.log("      4. EVM processes ball, decrements value, sends back");
       console.log("      ");
       
-      // Verify initial state
       expect(await pingPong.gameActive()).to.equal(false);
       expect(await pingPong.hasBall()).to.equal(false);
       
@@ -395,7 +337,6 @@ describe("PingPongEVM", function () {
       console.log(`      • rallyCount: ${await pingPong.rallyCount()}`);
       console.log(`      • maxRallies: ${await pingPong.maxRallies()}`);
       
-      // Verify all are in initial state
       expect(await pingPong.gameActive()).to.equal(false);
       expect(await pingPong.hasBall()).to.equal(false);
       expect(await pingPong.ballValue()).to.equal(0);
@@ -429,7 +370,7 @@ describe("PingPongEVM", function () {
       console.log("      ");
       console.log("      True Peer-to-Peer Ping-Pong Achieved!");
       
-      expect(true).to.equal(true); // Test passes to demonstrate the explanation
+      expect(true).to.equal(true);
     });
   });
 });

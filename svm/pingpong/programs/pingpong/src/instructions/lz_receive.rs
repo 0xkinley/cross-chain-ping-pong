@@ -47,7 +47,6 @@ impl LzReceive<'_> {
         
         require!(!game.paused, PingPongError::GamePaused);
         
-        // Clear message to prevent replay
         let seeds: &[&[u8]] = &[GAME_STATE_SEED, &[game.bump]];
         let accounts_for_clear = &ctx.remaining_accounts[0..Clear::MIN_ACCOUNTS_LEN];
         
@@ -66,31 +65,26 @@ impl LzReceive<'_> {
             },
         )?;
         
-        // Decode received ball value
         let received_msg = PingPongMessage::decode(&params.message)?;
 
         
         msg!("Ball received: value={}, rally={}", received_msg.ball_value, received_msg.rally_count);
         
-        // Validate received value
         require!(received_msg.ball_value > 0, PingPongError::BallValueZero);
         require!(
             received_msg.ball_value <= INITIAL_BALL_VALUE as u128,
             PingPongError::BallValueTooHigh
         );
         
-        // Decrement ball value
         let new_value = received_msg.ball_value
             .checked_sub(1)
             .ok_or(PingPongError::BallValueUnderflow)?;
         
-        // Update state
         game.ball_value = new_value;
         game.rally_count = game.rally_count.checked_add(1).unwrap_or(u64::MAX);
         game.has_ball = true;
         game.game_active = true;
         
-        // Check circuit breaker
         require!(
             game.rally_count <= crate::constants::MAX_RALLIES_CAP,
             PingPongError::MaxRalliesExceeded
@@ -102,7 +96,6 @@ impl LzReceive<'_> {
             game.rally_count
         );
         
-        // Game over check
         if new_value == 0 {
             game.game_active = false;
             game.has_ball = false;

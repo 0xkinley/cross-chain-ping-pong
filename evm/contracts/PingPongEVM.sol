@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
 import { IPingPong } from "./interfaces/IPingPong.sol";
@@ -8,23 +7,14 @@ import { OAppOptionsType3 } from "@layerzerolabs/oapp-evm/contracts/oapp/libs/OA
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
-    // ========================================
-    // CONSTANTS
-    // ========================================
 
     uint256 public constant INITIAL_BALL_VALUE = 1e20;
     uint16  public constant SEND_BALL = 1;
     uint256 public constant MAX_RALLIES_CAP = 100;
 
-    // ========================================
-    // IMMUTABLE VARIABLES
-    // ========================================
 
     uint32 public immutable peerEid;
 
-    // ========================================
-    // STATE VARIABLES
-    // ========================================
 
     uint256   public ballValue;
     uint256   public rallyCount;
@@ -32,9 +22,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
 
     mapping(bytes32 => bool) private _processedGuid;
 
-    // ========================================
-    // CONSTRUCTOR
-    // ========================================
 
     constructor(
         address _endpoint,
@@ -44,9 +31,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         peerEid = _peerEid;
     }
 
-    // ========================================
-    // PUBLIC FUNCTIONS
-    // ========================================
 
     function quote(
         uint256        _ballValue,
@@ -95,9 +79,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         emit ContractFunded(msg.sender, msg.value);
     }
 
-    // ========================================
-    // OWNER FUNCTIONS
-    // ========================================
 
     function pauseGame() external onlyOwner {
         if (!gameState.gameActive) revert GameNotActive();
@@ -105,24 +86,18 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         emit GameEnded(rallyCount, block.timestamp, "Paused by owner");
     }
 
-    // ========================================
-    // VIEW FUNCTIONS
-    // ========================================
 
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
     }
 
-    // ========================================
-    // INTERNAL FUNCTIONS
-    // ========================================
 
     function _lzReceive(
         Origin calldata _origin,
         bytes32         _guid,
         bytes calldata  _message,
-        address         /* _executor */,
-        bytes calldata  /* _extraData */
+        address         /*_executor*/,
+        bytes calldata  /*_extraData*/
     ) internal override {
         if (_origin.srcEid != peerEid) revert InvalidPeer();
 
@@ -132,7 +107,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         GameState memory gs = gameState;
         (uint256 receivedValue, uint256 receivedRally) = abi.decode(_message, (uint256, uint256));
 
-        // Auto-initialize game if not active
         if (!gs.gameActive) {
             if (gs.hasBall) revert AlreadyHasBall();
             _initializeGameFromPeer(receivedValue, receivedRally);
@@ -148,7 +122,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
 
         emit BallReceived(ballValue, rallyCount, block.timestamp);
 
-        // Check end conditions
         if (ballValue == 0) {
             gameState.gameActive = false;
             emit GameEnded(rallyCount, block.timestamp, "Ball reached 0");
@@ -204,9 +177,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         emit BallReturned(ballValue, rallyCount, guid);
     }
 
-    // ========================================
-    // RECEIVE & FALLBACK FUNCTIONS
-    // ========================================
 
     receive() external payable {
         emit ContractFunded(msg.sender, msg.value);
@@ -216,9 +186,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         emit ContractFunded(msg.sender, msg.value);
     }
 
-    // ========================================
-    // OVERRIDE FUNCTIONS
-    // ========================================
 
     function setPeer(uint32 _eid, bytes32 _peer) public override(IPingPong, OAppCore) onlyOwner {
         _setPeer(_eid, _peer);
@@ -267,9 +234,6 @@ contract PingPongEVM is IPingPong, OApp, OAppOptionsType3 {
         _sendBack();
     }
 
-    // ========================================
-    // GETTER FUNCTIONS
-    // ========================================
 
     function hasBall() external view returns (bool) {
         return gameState.hasBall;

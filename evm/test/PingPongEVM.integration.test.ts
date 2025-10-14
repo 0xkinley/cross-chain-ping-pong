@@ -10,17 +10,15 @@ describe("PingPongEVM Integration Tests", function () {
   let user: HardhatEthersSigner;
   
   const SOLANA_EID = 40168;
-  const INITIAL_BALL_VALUE = ethers.parseEther("100"); // 1e20
+  const INITIAL_BALL_VALUE = ethers.parseEther("100");
 
   beforeEach(async function () {
     [owner, user] = await ethers.getSigners();
 
-    // Deploy MockEndpoint for testing
     const MockEndpointFactory = await ethers.getContractFactory("MockEndpoint");
     mockEndpoint = await MockEndpointFactory.deploy() as MockEndpoint;
     await mockEndpoint.waitForDeployment();
 
-    // Deploy PingPongEVM
     const PingPongEVMFactory = await ethers.getContractFactory("PingPongEVM");
     pingPongEVM = await PingPongEVMFactory.deploy(
       await mockEndpoint.getAddress(),
@@ -29,7 +27,6 @@ describe("PingPongEVM Integration Tests", function () {
     ) as PingPongEVM;
     await pingPongEVM.waitForDeployment();
 
-    // Fund the contract
     await pingPongEVM.fund({ value: ethers.parseEther("1") });
   });
 
@@ -44,7 +41,6 @@ describe("PingPongEVM Integration Tests", function () {
       const ballValue = INITIAL_BALL_VALUE;
       const rallyCount = 42n;
 
-      // Test EVM's abi.encode format - must match Solana's decode expectations
       const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
         ["uint256", "uint256"],
         [ballValue, rallyCount]
@@ -57,10 +53,8 @@ describe("PingPongEVM Integration Tests", function () {
       console.log("  - Encoded Bytes:", (encoded.length - 2) / 2, "bytes");
       console.log("  - Encoded Data:", encoded);
 
-      // Verify it's exactly 64 bytes (128 hex chars + '0x')
-      expect(encoded.length).to.equal(130); // '0x' + 128 hex chars = 64 bytes
+      expect(encoded.length).to.equal(130);
 
-      // Test decoding works
       const [decodedBall, decodedRally] = ethers.AbiCoder.defaultAbiCoder().decode(
         ["uint256", "uint256"],
         encoded
@@ -73,14 +67,12 @@ describe("PingPongEVM Integration Tests", function () {
     it("Should handle game state transitions correctly", async function () {
       console.log("🎮 Testing Game State Transitions:");
       
-      // Initial state
       console.log("  1. Initial State:");
       console.log("     - Ball Value:", await pingPongEVM.ballValue());
       console.log("     - Rally Count:", await pingPongEVM.rallyCount());
       console.log("     - Game Active:", await pingPongEVM.gameActive());
       console.log("     - Has Ball:", await pingPongEVM.hasBall());
 
-      // Start game by serving
       const maxRallies = 10;
       const options = "0x";
       
@@ -98,18 +90,16 @@ describe("PingPongEVM Integration Tests", function () {
         console.log("     - Max Rallies:", await pingPongEVM.maxRallies());
 
         expect(await pingPongEVM.gameActive()).to.be.true;
-        expect(await pingPongEVM.hasBall()).to.be.false; // Ball sent to Solana
+        expect(await pingPongEVM.hasBall()).to.be.false;
         
       } catch (error) {
-        // Mock endpoint might not support full quote functionality
         console.log("     - Note: Using mock endpoint, some functions limited");
       }
     });
 
     it("Should validate message format for cross-chain compatibility", async function () {
-      console.log("🔍 Cross-Chain Message Format Validation:");
+      console.log(" Cross-Chain Message Format Validation:");
 
-      // Test various ball values that might occur during game
       const testCases = [
         { ball: INITIAL_BALL_VALUE, rally: 0n, desc: "Initial serve" },
         { ball: INITIAL_BALL_VALUE - 1n, rally: 1n, desc: "After first hit" },
@@ -129,7 +119,6 @@ describe("PingPongEVM Integration Tests", function () {
         console.log(`    - Rally: ${testCase.rally}`);
         console.log(`    - Encoded: ${encoded.slice(0, 20)}...${encoded.slice(-20)}`);
 
-        // Verify consistency
         const [decodedBall, decodedRally] = ethers.AbiCoder.defaultAbiCoder().decode(
           ["uint256", "uint256"],
           encoded
@@ -137,12 +126,12 @@ describe("PingPongEVM Integration Tests", function () {
 
         expect(decodedBall).to.equal(testCase.ball);
         expect(decodedRally).to.equal(testCase.rally);
-        expect(encoded.length).to.equal(130); // Always 64 bytes
+        expect(encoded.length).to.equal(130);
       }
     });
 
     it("Should demonstrate end-to-end message flow simulation", async function () {
-      console.log("🔄 Simulating Cross-Chain Message Flow:");
+      console.log(" Simulating Cross-Chain Message Flow:");
       
       console.log("  1. EVM → Solana Message:");
       const evmTxData = ethers.AbiCoder.defaultAbiCoder().encode(
@@ -170,13 +159,13 @@ describe("PingPongEVM Integration Tests", function () {
       console.log("     - Both follow uint256 padding ✓");
 
       expect(evmTxData.length).to.equal(solanaTxData.length);
-      expect(evmTxData.length).to.equal(130); // 64 bytes + '0x'
+      expect(evmTxData.length).to.equal(130);
     });
   });
 
   describe("Backend Integration Readiness", function () {
     it("Should be ready for testnet deployment", async function () {
-      console.log("🚀 Deployment Readiness Check:");
+      console.log(" Deployment Readiness Check:");
       
       const contractAddress = await pingPongEVM.getAddress();
       const balance = await ethers.provider.getBalance(contractAddress);
@@ -193,7 +182,7 @@ describe("PingPongEVM Integration Tests", function () {
     });
 
     it("Should show next steps for full deployment", async function () {
-      console.log("📋 Next Steps for Full Cross-Chain Testing:");
+      console.log(" Next Steps for Full Cross-Chain Testing:");
       console.log("  1. Deploy Solana program to testnet");
       console.log("  2. Configure LayerZero peer addresses");
       console.log("  3. Set up cross-chain message routing");
@@ -202,7 +191,6 @@ describe("PingPongEVM Integration Tests", function () {
       console.log("  6. Test fee management and funding");
       console.log("  7. Implement frontend integration");
 
-      // This test always passes - it's just documentation
       expect(true).to.be.true;
     });
   });
