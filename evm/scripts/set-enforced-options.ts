@@ -1,7 +1,7 @@
 import { ethers } from "hardhat";
 import { PingPongEVM } from "../typechain-types";
 
-const CONTRACT_ADDRESS = "0x55D59591773CBdC4a3dc5e38E8Ef1cE85C7Ff365";
+const CONTRACT_ADDRESS = "0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10";
 const SOLANA_EID = 40168;
 
 async function main() {

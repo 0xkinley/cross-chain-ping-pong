@@ -9,7 +9,7 @@ const IDL_PATH = path.resolve(__dirname, "../target/idl/pingpong.json");
 const GAME_STATE_SEED = "game_state";
 const PEER_SEED = "Peer";
 const REMOTE_EID = 40161;
-const EVM_CONTRACT_ADDRESS = "0x55D59591773CBdC4a3dc5e38E8Ef1cE85C7Ff365";
+const EVM_CONTRACT_ADDRESS = "0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10";
 
 function u32be(n: number) { return new BN(n).toArrayLike(Buffer, "be", 4); }
 function evmToBytes32(hex: string): number[] {

@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
+import '@layerzerolabs/toolbox-hardhat'
 import "dotenv/config";
 
 const config: HardhatUserConfig = {
@@ -36,6 +37,10 @@ const config: HardhatUserConfig = {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: "USD",
   },
+  layerZero: {
+        // Optional: deployment configuration
+        deploymentSourcePackages: ['@layerzerolabs/lz-evm-sdk-v2'],
+    },
 };
 
 export default config;

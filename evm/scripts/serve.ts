@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 async function main() {
   console.log(" Initializing Cross-Chain Ping-Pong Game");
   
-  const contractAddress = "0x55D59591773CBdC4a3dc5e38E8Ef1cE85C7Ff365";
+  const contractAddress = "0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10";
   
   const [signer] = await ethers.getSigners();
   const PingPongEVM = await ethers.getContractFactory("PingPongEVM");

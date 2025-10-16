@@ -11,6 +11,8 @@
     "serve": "npx hardhat run scripts/serve.ts --network sepolia"
   },
   "devDependencies": {
+    "@layerzerolabs/lz-definitions": "^3.0.139",
+    "@layerzerolabs/toolbox-hardhat": "^0.6.12",
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
     "@nomicfoundation/hardhat-ethers": "^3.1.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.1.0",

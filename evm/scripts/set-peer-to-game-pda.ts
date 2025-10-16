@@ -2,12 +2,12 @@ import { ethers } from "hardhat";
 import { PingPongEVM } from "../typechain-types";
 import bs58 from "bs58";
 
-const CONTRACT_ADDRESS = "0x55D59591773CBdC4a3dc5e38E8Ef1cE85C7Ff365";
+const CONTRACT_ADDRESS = "0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10";
 const SOLANA_EID = 40168;
-const SOLANA_GAME_PDA = "Dz5yBVXHez3vQ8uypCReiX6ufLtvNcLfdrp5hAGxJLHv";
+const SOLANA_PROGRAM_ID = "Cw5hAtJEQp3vEnR4Vejbb8P7VSa5TWFzTrzpMNNEe8TF";
 
 async function main() {
-  console.log("Setting LayerZero Peer to Game PDA");
+  console.log("Setting LayerZero Peer to Solana Program ID");
 
   try {
     const [signer] = await ethers.getSigners();
@@ -16,14 +16,14 @@ async function main() {
     const contract = await ethers.getContractAt("PingPongEVM", CONTRACT_ADDRESS) as PingPongEVM;
     console.log("Contract address:", CONTRACT_ADDRESS);
 
-    console.log("\nConverting Solana Game PDA to peer address...");
-    console.log("Solana Game PDA (base58):", SOLANA_GAME_PDA);
+    console.log("\nConverting Solana Program ID to peer address...");
+    console.log("Solana Program ID (base58):", SOLANA_PROGRAM_ID);
     
-    const gamePDABytes = bs58.decode(SOLANA_GAME_PDA);
-    console.log("Game PDA bytes length:", gamePDABytes.length);
-    console.log("Game PDA bytes:", Buffer.from(gamePDABytes).toString('hex'));
+    const programIdBytes = bs58.decode(SOLANA_PROGRAM_ID);
+    console.log("Program ID bytes length:", programIdBytes.length);
+    console.log("Program ID bytes:", Buffer.from(programIdBytes).toString('hex'));
     
-    const peerAddress = "0x" + Buffer.from(gamePDABytes).toString('hex');
+    const peerAddress = "0x" + Buffer.from(programIdBytes).toString('hex');
     console.log("Peer address (hex):", peerAddress);
     
     const peerBytes32 = ethers.zeroPadValue(peerAddress, 32);
@@ -39,7 +39,7 @@ async function main() {
 
     console.log("\nSetting new peer configuration...");
     console.log("Target EID:", SOLANA_EID);
-    console.log("New Peer Address (Game PDA):", peerBytes32);
+    console.log("New Peer Address (Program ID):", peerBytes32);
 
     const tx = await contract.setPeer(SOLANA_EID, peerBytes32);
     
@@ -56,7 +56,7 @@ async function main() {
     console.log("New peer address:", newPeer);
     
     if (newPeer.toLowerCase() === peerBytes32.toLowerCase()) {
-      console.log("✅ Peer successfully set to Game PDA!");
+      console.log("✅ Peer successfully set to Solana Program ID!");
     } else {
       console.log("❌ Peer configuration failed!");
     }

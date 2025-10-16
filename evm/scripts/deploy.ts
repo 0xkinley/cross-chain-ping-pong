@@ -10,7 +10,7 @@ async function main() {
   if (network.name === "sepolia") {
     LZ_ENDPOINT = "0x6EDCE65403992e310A62460808c4b910D972f10f";
     SOLANA_EID = 40168;
-    console.log("📡 Network: Sepolia Testnet");
+    console.log(" Network: Sepolia Testnet");
     console.log(" Solana Target: Devnet");
   } else if (network.name === "localhost" || network.name === "hardhat") {
     LZ_ENDPOINT = "0x6EDCE65403992e310A62460808c4b910D972f10f";
@@ -28,8 +28,8 @@ async function main() {
   console.log(" LayerZero Endpoint:", LZ_ENDPOINT);
   console.log(" Peer EID (Solana):", SOLANA_EID);
   
-  if (balance < ethers.parseEther("0.1")) {
-    throw new Error("Insufficient balance for deployment. Need at least 0.1 ETH.");
+  if (balance < ethers.parseEther("0.01")) {
+    throw new Error("Insufficient balance for deployment. Need at least 0.01 ETH.");
   }
 
   console.log("\n📦 Deploying PingPongEVM...");
