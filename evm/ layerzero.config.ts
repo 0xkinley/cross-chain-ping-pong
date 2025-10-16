@@ -13,7 +13,7 @@ const solanaContract: OmniPointHardhat = {
 const sepoliaContract: OmniPointHardhat = {
     eid: EndpointId.SEPOLIA_V2_TESTNET,
     contractName: 'PingPongEVM',
-    address: '0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10', // Add your deployed EVM contract address here after deployment
+    address: '0x7271592d027fc1055F7E13f8947a1D5CBc8Aed10', 
 }
 
 // Optional: Add more EVM testnets
